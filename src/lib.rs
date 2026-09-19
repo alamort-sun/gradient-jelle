@@ -8,8 +8,10 @@ pub mod persistence;
 pub mod category_map;
 pub mod prediction;
 pub mod boundary;
+pub mod jelle;
 
 pub use codec_gate::{CodecValidated, ModelOutput, accept_model_output};
+pub use jelle::{Jelle, JelleState, ExpertIndex, LlmCondition, StepOutcome, JelleError};
 pub use persistence::{PersistedRow, ValidatedRecord, materialize};
 pub use category_map::{Category, FloatAxis, MappingTable, to_float, from_float};
 pub use prediction::{PredictionAttempt, Decision, decide};
