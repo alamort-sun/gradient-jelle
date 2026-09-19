@@ -5,8 +5,9 @@
 ## gradient-codec (in-ecosystem)
 
 - Source: https://github.com/alamort-sun/gradient-codec (PolyForm Noncommercial policy family)
+- Canonical pin for Vector15D: commit `c8d0ee1` (feat: universal magnetic poles)
 - Pin: `9f4b4d5` (observed 2026-09-15; re-pin before use — upstream moves same-day)
-- Provides: Vector13D type, DomainWall/GaugeCoupling enums, observed baselines (n1, n2), validation authority
+- Provides: Vector15D type (Vector13D alias; fields 14–15 magnetic_north/magnetic_south), DomainWall/GaugeCoupling enums, observed baselines (n1, n2), validation authority
 - Note: types at this boundary must stay in sync with the pinned commit
 
 ## Third-party

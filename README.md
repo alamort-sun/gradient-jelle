@@ -27,3 +27,7 @@ The software is licensed under the [PolyForm Noncommercial License 1.0.0](LICENS
 Individuals, hobbyists, students, independent researchers, educators, nonprofits, and community projects are welcome to use, modify, and share the software for noncommercial purposes. See [USE-POLICY.md](USE-POLICY.md).
 
 Commercial use requires a separate written license. See [COMMERCIAL.md](COMMERCIAL.md).
+
+## Codec geometry
+
+Canonical state is **Vector15D** in [gradient-codec](https://github.com/alamort-sun/gradient-codec) @ `c8d0ee1`. Fields 14–15 (`magnetic_north`, `magnetic_south`) are universal polar pre-stress. `Vector13D` remains a type alias.
