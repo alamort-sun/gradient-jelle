@@ -44,12 +44,24 @@ impl JepaLatent {
     pub fn encode(state: &JelleState) -> JepaLatent {
         let v = &state.0;
         let fields: [f64; 10] = [
-            v.amplitude, v.frequency, v.phase, v.coherence, v.entropy,
-            v.composition, v.resonance, v.ozone_buffer, v.su2_polarity, v.magnetic_north,
+            v.amplitude,
+            v.frequency,
+            v.phase,
+            v.coherence,
+            v.entropy,
+            v.composition,
+            v.resonance,
+            v.ozone_buffer,
+            v.su2_polarity,
+            v.magnetic_north,
         ];
         // Weighted sum over the validated fields — deterministic and bounded by
         // the field magnitudes the codec already admitted.
-        let code: f64 = fields.iter().enumerate().map(|(i, f)| (i as f64 + 1.0) * f).sum();
+        let code: f64 = fields
+            .iter()
+            .enumerate()
+            .map(|(i, f)| (i as f64 + 1.0) * f)
+            .sum();
         let uncertainty = (1.0 - v.coherence).clamp(0.0, 1.0) as f32;
         JepaLatent { code, uncertainty }
     }
@@ -147,48 +159,98 @@ mod unit {
             use crate::JelleState;
             use vecGradient::{DomainWall, GaugeCoupling};
             JelleState::new(
-                 0.5, 0.0, 0.0, 0.9, 0.0, 0.0, 0.0, 0.5,
-                DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6, 0.2, 0.2,
-            ).expect("finite")
+                0.5,
+                0.0,
+                0.0,
+                0.9,
+                0.0,
+                0.0,
+                0.0,
+                0.5,
+                DomainWall::Linked,
+                50.0,
+                0.3,
+                GaugeCoupling::Spinning,
+                0.6,
+                0.2,
+                0.2,
+            )
+            .expect("finite")
         }
         assert_eq!(JepaLatent::encode(&s()), JepaLatent::encode(&s()));
-      }
+    }
 
-     #[test]
+    #[test]
     fn higher_coherence_lowers_uncertainty() {
         use vecGradient::{DomainWall, GaugeCoupling};
         #[derive(Clone, Copy)]
-        struct P { s: f64 }
+        struct P {
+            s: f64,
+        }
         fn mk(coh: f64) -> JelleState {
             JelleState::new(
-                0.5, 0.0, 0.0, coh, 0.0, 0.0, 0.0, 0.5,
-                DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6, 0.2, 0.2,
-            ).expect("finite")
+                0.5,
+                0.0,
+                0.0,
+                coh,
+                0.0,
+                0.0,
+                0.0,
+                0.5,
+                DomainWall::Linked,
+                50.0,
+                0.3,
+                GaugeCoupling::Spinning,
+                0.6,
+                0.2,
+                0.2,
+            )
+            .expect("finite")
         }
-        assert!(JepaLatent::encode(&mk(0.9)).uncertainty < JepaLatent::encode(&mk(0.2)).uncertainty);
-      }
+        assert!(
+            JepaLatent::encode(&mk(0.9)).uncertainty < JepaLatent::encode(&mk(0.2)).uncertainty
+        );
+    }
 
-     #[test]
+    #[test]
     fn routes_on_certain_latent() {
         let t = MappingTable::new().define(Category::A, 0.0);
         let gate = MoeGate::new(0.6);
-        let latent = JepaLatent { code: 1.0, uncertainty: 0.1 };
-        assert!(matches!(gate.route(&latent, Category::A, &t, false).unwrap(), MoeRoute::Routed { .. }));
-      }
+        let latent = JepaLatent {
+            code: 1.0,
+            uncertainty: 0.1,
+        };
+        assert!(matches!(
+            gate.route(&latent, Category::A, &t, false).unwrap(),
+            MoeRoute::Routed { .. }
+        ));
+    }
 
-     #[test]
+    #[test]
     fn abstains_on_uncertain_latent() {
         let t = MappingTable::new().define(Category::A, 0.0);
         let gate = MoeGate::new(0.6);
-        let latent = JepaLatent { code: 1.0, uncertainty: 0.7 };
-        assert!(matches!(gate.route(&latent, Category::A, &t, false).unwrap(), MoeRoute::Abstained));
-      }
+        let latent = JepaLatent {
+            code: 1.0,
+            uncertainty: 0.7,
+        };
+        assert!(matches!(
+            gate.route(&latent, Category::A, &t, false).unwrap(),
+            MoeRoute::Abstained
+        ));
+    }
 
-     #[test]
+    #[test]
     fn refuses_forced_certainty_on_uncertain_latent() {
         let t = MappingTable::new().define(Category::A, 0.0);
         let gate = MoeGate::new(0.6);
-        let latent = JepaLatent { code: 1.0, uncertainty: 0.7 };
-        assert!(gate.route(&latent, Category::A, &t, true).unwrap_err() == MoeError::ForcedCertainty(0.7));
-      }
+        let latent = JepaLatent {
+            code: 1.0,
+            uncertainty: 0.7,
+        };
+        assert!(
+            gate.route(&latent, Category::A, &t, true).unwrap_err()
+                == MoeError::ForcedCertainty(0.7)
+        );
+    }
 }

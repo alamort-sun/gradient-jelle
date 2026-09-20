@@ -26,16 +26,38 @@ pub struct JelleState(pub Vector15D);
 impl JelleState {
     /// Codec-valid state constructor. Rejects non-finite fields at the boundary.
     pub fn new(
-        amplitude: f64, frequency: f64, phase: f64, coherence: f64,
-        entropy: f64, composition: f64, resonance: f64, ozone_buffer: f64,
-        domain_wall: DomainWall, su2_polarity: f64, torsion: f64,
-        gauge_coupling: GaugeCoupling, closure: f64,
-        magnetic_north: f64, magnetic_south: f64,
+        amplitude: f64,
+        frequency: f64,
+        phase: f64,
+        coherence: f64,
+        entropy: f64,
+        composition: f64,
+        resonance: f64,
+        ozone_buffer: f64,
+        domain_wall: DomainWall,
+        su2_polarity: f64,
+        torsion: f64,
+        gauge_coupling: GaugeCoupling,
+        closure: f64,
+        magnetic_north: f64,
+        magnetic_south: f64,
     ) -> Result<Self, vecGradient::Vector15DError> {
         Ok(JelleState(Vector15D::try_new_15(
-            amplitude, frequency, phase, coherence, entropy, composition,
-            resonance, ozone_buffer, domain_wall, su2_polarity, torsion,
-            gauge_coupling, closure, magnetic_north, magnetic_south,
+            amplitude,
+            frequency,
+            phase,
+            coherence,
+            entropy,
+            composition,
+            resonance,
+            ozone_buffer,
+            domain_wall,
+            su2_polarity,
+            torsion,
+            gauge_coupling,
+            closure,
+            magnetic_north,
+            magnetic_south,
         )?))
     }
 
@@ -49,15 +71,25 @@ impl JelleState {
         let v = &self.0;
         let mut acc: u64 = 0xcbf29ce484222325;
         let fields: [f64; 8] = [
-            v.amplitude, v.frequency, v.phase, v.coherence,
-            v.entropy, v.composition, v.resonance, v.ozone_buffer,
+            v.amplitude,
+            v.frequency,
+            v.phase,
+            v.coherence,
+            v.entropy,
+            v.composition,
+            v.resonance,
+            v.ozone_buffer,
         ];
         for f in &fields {
             acc = (acc ^ f.to_bits())
                 .wrapping_mul(0x100000001b3)
-                .wrapping_add(v.su2_polarity.to_bits().wrapping_shl(2)
-                    .wrapping_add(v.magnetic_north.to_bits().wrapping_shl(4))
-                    .wrapping_shr(26));
+                .wrapping_add(
+                    v.su2_polarity
+                        .to_bits()
+                        .wrapping_shl(2)
+                        .wrapping_add(v.magnetic_north.to_bits().wrapping_shl(4))
+                        .wrapping_shr(26),
+                );
         }
         acc
     }
@@ -138,11 +170,7 @@ impl Jelle {
     ///    crossing fails closed.
     ///
     /// Returns Err the moment ANY gate refuses. The bypass path does not exist.
-    pub fn step(
-        &self,
-        state: &JelleState,
-        llm: &LlmCondition,
-    ) -> Result<StepOutcome, JelleError> {
+    pub fn step(&self, state: &JelleState, llm: &LlmCondition) -> Result<StepOutcome, JelleError> {
         // 1. codec gate — finite fields
         state.validate()?;
 
@@ -190,10 +218,7 @@ impl Jelle {
                 confidence,
                 record,
             }),
-            Decision::Abstain { reason } => Ok(StepOutcome::Abstained {
-                reason,
-                record,
-            }),
+            Decision::Abstain { reason } => Ok(StepOutcome::Abstained { reason, record }),
         }
     }
 
@@ -225,10 +250,23 @@ mod tests {
 
     fn finite_state() -> JelleState {
         JelleState::new(
-            0.5, 0.0, 0.0, 0.7, 0.0, 0.0, 0.0, 0.5,
-            DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
-            0.2, 0.2,
-        ).expect("finite state must build")
+            0.5,
+            0.0,
+            0.0,
+            0.7,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            DomainWall::Linked,
+            50.0,
+            0.3,
+            GaugeCoupling::Spinning,
+            0.6,
+            0.2,
+            0.2,
+        )
+        .expect("finite state must build")
     }
 
     fn moe_table() -> MappingTable {
@@ -241,31 +279,52 @@ mod tests {
     #[test]
     fn full_pipeline_predicts_when_confidence_high() {
         let jelle = Jelle::new(ExpertIndex(Category::B), moe_table());
-        let out = jelle.step(
-            &finite_state(),
-            &LlmCondition { label: "stable", confidence: 0.9, force: false },
-        ).expect("predict");
+        let out = jelle
+            .step(
+                &finite_state(),
+                &LlmCondition {
+                    label: "stable",
+                    confidence: 0.9,
+                    force: false,
+                },
+            )
+            .expect("predict");
         assert!(matches!(out, StepOutcome::Predicted { .. }));
     }
 
     #[test]
     fn full_pipeline_abstains_when_confidence_low() {
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
-        let out = jelle.step(
-            &finite_state(),
-            &LlmCondition { label: "maybe", confidence: 0.4, force: false },
-        ).expect("abstain");
+        let out = jelle
+            .step(
+                &finite_state(),
+                &LlmCondition {
+                    label: "maybe",
+                    confidence: 0.4,
+                    force: false,
+                },
+            )
+            .expect("abstain");
         assert!(matches!(out, StepOutcome::Abstained { .. }));
     }
 
     #[test]
     fn forced_uncertainty_is_refused_end_to_end() {
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
-        let e = jelle.step(
-            &finite_state(),
-            &LlmCondition { label: "diagnosis-shaped", confidence: 0.3, force: true },
-        ).unwrap_err();
-        assert_eq!(e, JelleError::Prediction(PredictionError::ForcedUncertainty));
+        let e = jelle
+            .step(
+                &finite_state(),
+                &LlmCondition {
+                    label: "diagnosis-shaped",
+                    confidence: 0.3,
+                    force: true,
+                },
+            )
+            .unwrap_err();
+        assert_eq!(
+            e,
+            JelleError::Prediction(PredictionError::ForcedUncertainty)
+        );
     }
 
     #[test]
@@ -273,20 +332,35 @@ mod tests {
         let mut bad = finite_state();
         bad.0.amplitude = f64::NAN;
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
-        let e = jelle.step(
-            &bad,
-            &LlmCondition { label: "x", confidence: 0.9, force: false },
-        ).unwrap_err();
+        let e = jelle
+            .step(
+                &bad,
+                &LlmCondition {
+                    label: "x",
+                    confidence: 0.9,
+                    force: false,
+                },
+            )
+            .unwrap_err();
         assert!(matches!(e, JelleError::NonFinite(_)));
     }
 
     #[test]
     fn unmapped_expert_is_refused_at_category_gate() {
-        let jelle = Jelle::new(ExpertIndex(Category::B), MappingTable::new().define(Category::A, 0.0));
-        let e = jelle.step(
-            &finite_state(),
-            &LlmCondition { label: "x", confidence: 0.9, force: false },
-        ).unwrap_err();
+        let jelle = Jelle::new(
+            ExpertIndex(Category::B),
+            MappingTable::new().define(Category::A, 0.0),
+        );
+        let e = jelle
+            .step(
+                &finite_state(),
+                &LlmCondition {
+                    label: "x",
+                    confidence: 0.9,
+                    force: false,
+                },
+            )
+            .unwrap_err();
         assert!(matches!(e, JelleError::Mapping(_)));
     }
 
@@ -299,29 +373,59 @@ mod tests {
     fn learned_route_on_high_coherence_routes() {
         // finite_state has coherence 0.7 -> uncertainty 0.3 -> below default 0.6 -> routes
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
-        let r = jelle.learn(&finite_state(), &MoeGate::default(), false).expect("route");
+        let r = jelle
+            .learn(&finite_state(), &MoeGate::default(), false)
+            .expect("route");
         assert!(matches!(r, MoeRoute::Routed { .. }));
     }
 
     #[test]
     fn learned_route_on_shattered_state_abstains() {
         let flat = JelleState::new(
-            0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5,
-            DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
-            0.2, 0.2,
-        ).expect("finite");
+            0.5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            DomainWall::Linked,
+            50.0,
+            0.3,
+            GaugeCoupling::Spinning,
+            0.6,
+            0.2,
+            0.2,
+        )
+        .expect("finite");
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
-        let r = jelle.learn(&flat, &MoeGate::default(), false).expect("abstain");
+        let r = jelle
+            .learn(&flat, &MoeGate::default(), false)
+            .expect("abstain");
         assert!(matches!(r, MoeRoute::Abstained));
     }
 
     #[test]
     fn forced_route_on_shattered_state_refused() {
         let flat = JelleState::new(
-            0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5,
-            DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
-            0.2, 0.2,
-        ).expect("finite");
+            0.5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            DomainWall::Linked,
+            50.0,
+            0.3,
+            GaugeCoupling::Spinning,
+            0.6,
+            0.2,
+            0.2,
+        )
+        .expect("finite");
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
         let e = jelle.learn(&flat, &MoeGate::default(), true).unwrap_err();
         assert!(matches!(e, MoeError::ForcedCertainty(_)));

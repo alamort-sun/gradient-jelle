@@ -13,8 +13,13 @@ pub struct PredictionAttempt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Decision {
-    Predict { label: &'static str, confidence: f32 },
-    Abstain { reason: &'static str },
+    Predict {
+        label: &'static str,
+        confidence: f32,
+    },
+    Abstain {
+        reason: &'static str,
+    },
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]

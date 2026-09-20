@@ -27,7 +27,10 @@ pub enum PersistenceError {
 
 /// Materialize a row for use as truth. A persisted row still requires an
 /// explicit validity check — existence in the DB is not enough.
-pub fn materialize(row: &PersistedRow, explicitly_validated: bool) -> Result<ValidatedRecord, PersistenceError> {
+pub fn materialize(
+    row: &PersistedRow,
+    explicitly_validated: bool,
+) -> Result<ValidatedRecord, PersistenceError> {
     if !row.persisted {
         return Err(PersistenceError::NotPersisted);
     }
