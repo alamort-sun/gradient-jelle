@@ -13,6 +13,7 @@
 use crate::boundary::{claim_about_entity, ClaimClass};
 use crate::category_map::{from_float, to_float, Category, MappingError, MappingTable};
 use crate::codec_gate::{accept_model_output, CodecGateError, CodecValidated, ModelOutput};
+use crate::jepa_moe::{JepaLatent, MoeError, MoeGate, MoeRoute};
 use crate::prediction::{decide, Decision, PredictionAttempt, PredictionError};
 use vecGradient::{DomainWall, GaugeCoupling, Vector15D};
 
@@ -30,17 +31,17 @@ impl JelleState {
         domain_wall: DomainWall, su2_polarity: f64, torsion: f64,
         gauge_coupling: GaugeCoupling, closure: f64,
         magnetic_north: f64, magnetic_south: f64,
-     ) -> Result<Self, vecGradient::Vector15DError> {
+    ) -> Result<Self, vecGradient::Vector15DError> {
         Ok(JelleState(Vector15D::try_new_15(
             amplitude, frequency, phase, coherence, entropy, composition,
             resonance, ozone_buffer, domain_wall, su2_polarity, torsion,
             gauge_coupling, closure, magnetic_north, magnetic_south,
-         )?))
-     }
+        )?))
+    }
 
     pub fn validate(&self) -> Result<(), vecGradient::Vector15DError> {
         self.0.validate()
-     }
+    }
 
     /// Deterministic frame id derived from the state — no external counter, so
     /// the same state always produces the same codec frame.
@@ -50,16 +51,16 @@ impl JelleState {
         let fields: [f64; 8] = [
             v.amplitude, v.frequency, v.phase, v.coherence,
             v.entropy, v.composition, v.resonance, v.ozone_buffer,
-         ];
+        ];
         for f in &fields {
             acc = (acc ^ f.to_bits())
-                 .wrapping_mul(0x100000001b3)
-                 .wrapping_add(v.su2_polarity.to_bits().wrapping_shl(2)
-                     .wrapping_add(v.magnetic_north.to_bits().wrapping_shl(4))
-                     .wrapping_shr(26));
-         }
+                .wrapping_mul(0x100000001b3)
+                .wrapping_add(v.su2_polarity.to_bits().wrapping_shl(2)
+                    .wrapping_add(v.magnetic_north.to_bits().wrapping_shl(4))
+                    .wrapping_shr(26));
+        }
         acc
-     }
+    }
 }
 
 /// A routed expert index. Categorical -> float ONLY via the category-map gate.
@@ -82,30 +83,32 @@ pub enum StepOutcome {
         label: &'static str,
         confidence: f32,
         record: crate::persistence::ValidatedRecord,
-     },
+    },
     Abstained {
         reason: &'static str,
         record: crate::persistence::ValidatedRecord,
-     },
+    },
 }
 
 /// Errors from the Jelle pipeline. Each variant names the gate that refused, so
 /// failure is attributed to the governing law, not swallowed.
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum JelleError {
-     #[error("codec gate refused state: {0}")]
+    #[error("codec gate refused state: {0}")]
     Codec(#[from] CodecGateError),
-     #[error("non-finite codec field: {0}")]
+    #[error("non-finite codec field: {0}")]
     NonFinite(#[from] vecGradient::Vector15DError),
-     #[error("category<->float gate refused: {0}")]
+    #[error("category<->float gate refused: {0}")]
     Mapping(#[from] MappingError),
-     #[error("category map forward/reverse inconsistent")]
+    #[error("category map forward/reverse inconsistent")]
     BadMapping,
-     #[error("prediction gate: {0}")]
+    #[error("prediction gate: {0}")]
     Prediction(#[from] PredictionError),
-     #[error("persistence gate: {0}")]
+    #[error("persistence gate: {0}")]
     Persistence(#[from] crate::persistence::PersistenceError),
-     #[error("could not encode codec frame")]
+    #[error("moe routing gate: {0}")]
+    Moe(#[from] MoeError),
+    #[error("could not encode codec frame")]
     Encode,
 }
 
@@ -122,13 +125,13 @@ pub struct Jelle {
 impl Jelle {
     pub fn new(expert: ExpertIndex, mapping: MappingTable) -> Self {
         Self { expert, mapping }
-     }
+    }
 
     /// Run one governed step across all five gates.
     ///
-    /// 1. state.validate()            -> codec gate (finite fields via vecGradient)
-    /// 2. expert category<->float     -> category-map gate
-    /// 3. llm.condition -> decide()   -> prediction gate (no forced uncertainty)
+    /// 1. state.validate()             -> codec gate (finite fields via vecGradient)
+    /// 2. expert category<->float      -> category-map gate
+    /// 3. llm.condition -> decide()    -> prediction gate (no forced uncertainty)
     /// 4. model-output codec-gate + persistence-materialize
     /// 5. boundary law: reason about STATE (the marble), never a diagnosis/
     ///    identity claim about the person — the model side of the governed
@@ -139,45 +142,45 @@ impl Jelle {
         &self,
         state: &JelleState,
         llm: &LlmCondition,
-     ) -> Result<StepOutcome, JelleError> {
-     // 1. codec gate — finite fields
+    ) -> Result<StepOutcome, JelleError> {
+        // 1. codec gate — finite fields
         state.validate()?;
 
-     // 2. category<->float gate — expert index must map BOTH ways
+        // 2. category<->float gate — expert index must map BOTH ways
         let axis = to_float(self.expert.0, Some(&self.mapping))?;
         let back = from_float(axis, Some(&self.mapping))?;
         if back != self.expert.0 {
             return Err(JelleError::BadMapping);
-         }
+        }
 
-     // 3. prediction gate — abstention is a valid output; forcing is not
+        // 3. prediction gate — abstention is a valid output; forcing is not
         let att = PredictionAttempt {
             label: llm.label,
             confidence: llm.confidence,
             force: llm.force,
-         };
+        };
         let decision = decide(&att)?;
 
-     // 4. codec-gate the model output, then persistence-materialize it.
-     //    codec_validated is true ONLY because state.validate() (step 1) passed —
-     //    the flag is earned, not asserted.
+        // 4. codec-gate the model output, then persistence-materialize it.
+        //    codec_validated is true ONLY because state.validate() (step 1) passed —
+        //    the flag is earned, not asserted.
         let raw = serde_json::to_vec(&state.0).map_err(|_| JelleError::Encode)?;
         let out = ModelOutput {
             raw,
             codec_validated: true,
             frame_id: Some(state.frame_id()),
-         };
+        };
         let validated: CodecValidated = accept_model_output(&out)?;
         let row = crate::persistence::PersistedRow {
             id: validated.frame_id,
             payload: validated.bytes,
             persisted: true,
-         };
+        };
         let record = crate::persistence::materialize(&row, /* explicitly_validated: */ true)?;
 
-     // 5. boundary law — the pipeline reasons about state, not about the person.
-     //    claim_about_entity always fails closed; the guard is kept explicit so a
-     //    future loosening trips this gate instead of silently passing.
+        // 5. boundary law — the pipeline reasons about state, not about the person.
+        //    claim_about_entity always fails closed; the guard is kept explicit so a
+        //    future loosening trips this gate instead of silently passing.
         let _refuse = claim_about_entity(ClaimClass::Diagnosis);
         debug_assert!(_refuse.is_err());
 
@@ -186,13 +189,34 @@ impl Jelle {
                 label,
                 confidence,
                 record,
-             }),
+            }),
             Decision::Abstain { reason } => Ok(StepOutcome::Abstained {
                 reason,
                 record,
-             }),
-         }
-     }
+            }),
+        }
+    }
+
+    /// Encode the current frame into its JEPA latent. A pure function of the
+    /// codec-validated state — the "soul" side of Jelle.
+    pub fn encode(&self, state: &JelleState) -> JepaLatent {
+        JepaLatent::encode(state)
+    }
+
+    /// Run the learned MoE routing step. Encodes the frame into a latent, then
+    /// routes it to this Jelle's active expert through the MoE gate + the
+    /// category-map gate. Certain -> Routed; uncertain -> Abstained; forcing a
+    /// route on an uncertain latent is refused (MoeError::ForcedCertainty), the
+    /// routing analogue of "no forced uncertainty."
+    pub fn learn(
+        &self,
+        state: &JelleState,
+        gate: &MoeGate,
+        force: bool,
+    ) -> Result<MoeRoute, MoeError> {
+        let latent = self.encode(state);
+        gate.route(&latent, self.expert.0, &self.mapping, force)
+    }
 }
 
 #[cfg(test)]
@@ -204,17 +228,17 @@ mod tests {
             0.5, 0.0, 0.0, 0.7, 0.0, 0.0, 0.0, 0.5,
             DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
             0.2, 0.2,
-         ).expect("finite state must build")
-     }
+        ).expect("finite state must build")
+    }
 
-     fn moe_table() -> MappingTable {
+    fn moe_table() -> MappingTable {
         MappingTable::new()
-             .define(Category::A, 0.0)
-             .define(Category::B, 1.0)
-             .define(Category::C, 2.0)
-     }
+            .define(Category::A, 0.0)
+            .define(Category::B, 1.0)
+            .define(Category::C, 2.0)
+    }
 
-     #[test]
+    #[test]
     fn full_pipeline_predicts_when_confidence_high() {
         let jelle = Jelle::new(ExpertIndex(Category::B), moe_table());
         let out = jelle.step(
@@ -222,9 +246,9 @@ mod tests {
             &LlmCondition { label: "stable", confidence: 0.9, force: false },
         ).expect("predict");
         assert!(matches!(out, StepOutcome::Predicted { .. }));
-     }
+    }
 
-     #[test]
+    #[test]
     fn full_pipeline_abstains_when_confidence_low() {
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
         let out = jelle.step(
@@ -232,9 +256,9 @@ mod tests {
             &LlmCondition { label: "maybe", confidence: 0.4, force: false },
         ).expect("abstain");
         assert!(matches!(out, StepOutcome::Abstained { .. }));
-     }
+    }
 
-     #[test]
+    #[test]
     fn forced_uncertainty_is_refused_end_to_end() {
         let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
         let e = jelle.step(
@@ -242,9 +266,9 @@ mod tests {
             &LlmCondition { label: "diagnosis-shaped", confidence: 0.3, force: true },
         ).unwrap_err();
         assert_eq!(e, JelleError::Prediction(PredictionError::ForcedUncertainty));
-     }
+    }
 
-     #[test]
+    #[test]
     fn non_finite_state_refused_at_codec_gate() {
         let mut bad = finite_state();
         bad.0.amplitude = f64::NAN;
@@ -254,9 +278,9 @@ mod tests {
             &LlmCondition { label: "x", confidence: 0.9, force: false },
         ).unwrap_err();
         assert!(matches!(e, JelleError::NonFinite(_)));
-     }
+    }
 
-     #[test]
+    #[test]
     fn unmapped_expert_is_refused_at_category_gate() {
         let jelle = Jelle::new(ExpertIndex(Category::B), MappingTable::new().define(Category::A, 0.0));
         let e = jelle.step(
@@ -264,10 +288,42 @@ mod tests {
             &LlmCondition { label: "x", confidence: 0.9, force: false },
         ).unwrap_err();
         assert!(matches!(e, JelleError::Mapping(_)));
-     }
+    }
 
-     #[test]
+    #[test]
     fn same_state_yields_same_frame_id() {
         assert_eq!(finite_state().frame_id(), finite_state().frame_id());
-     }
+    }
+
+    #[test]
+    fn learned_route_on_high_coherence_routes() {
+        // finite_state has coherence 0.7 -> uncertainty 0.3 -> below default 0.6 -> routes
+        let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
+        let r = jelle.learn(&finite_state(), &MoeGate::default(), false).expect("route");
+        assert!(matches!(r, MoeRoute::Routed { .. }));
+    }
+
+    #[test]
+    fn learned_route_on_shattered_state_abstains() {
+        let flat = JelleState::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5,
+            DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
+            0.2, 0.2,
+        ).expect("finite");
+        let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
+        let r = jelle.learn(&flat, &MoeGate::default(), false).expect("abstain");
+        assert!(matches!(r, MoeRoute::Abstained));
+    }
+
+    #[test]
+    fn forced_route_on_shattered_state_refused() {
+        let flat = JelleState::new(
+            0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5,
+            DomainWall::Linked, 50.0, 0.3, GaugeCoupling::Spinning, 0.6,
+            0.2, 0.2,
+        ).expect("finite");
+        let jelle = Jelle::new(ExpertIndex(Category::A), moe_table());
+        let e = jelle.learn(&flat, &MoeGate::default(), true).unwrap_err();
+        assert!(matches!(e, MoeError::ForcedCertainty(_)));
+    }
 }
