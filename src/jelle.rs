@@ -242,6 +242,16 @@ impl Jelle {
         let latent = self.encode(state);
         gate.route(&latent, self.expert.0, &self.mapping, force)
     }
+
+    /// Active expert index (for climate / MoE route helpers).
+    pub fn expert(&self) -> ExpertIndex {
+        self.expert
+    }
+
+    /// Category<->float mapping table used by MoE routing.
+    pub fn mapping_ref(&self) -> &MappingTable {
+        &self.mapping
+    }
 }
 
 #[cfg(test)]
