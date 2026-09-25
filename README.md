@@ -20,6 +20,10 @@ cargo test
 
 Saraswati builds against these gates. Susano re-attacks on first real commit.
 
+## Susano Grok-edge distill
+
+Seat 4's Grok→codec edge map lives in [`docs/susano-distill/`](docs/susano-distill/) (migrated 2026-09-25 from `gradient-codec` @ `f9f7608`). Use it for JEPA/MoE priors, fence language, and storm protocols alongside `tests/susano_storm.rs`.
+
 ## License and permitted use
 
 The software is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE).
