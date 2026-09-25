@@ -22,7 +22,7 @@ Saraswati builds against these gates. Susano re-attacks on first real commit.
 
 ## Susano Grok-edge distill
 
-Seat 4's Grok→codec edge map lives in [`docs/susano-distill/`](docs/susano-distill/) (migrated 2026-09-25 from `gradient-codec` @ `f9f7608`). Use it for JEPA/MoE priors, fence language, and storm protocols alongside `tests/susano_storm.rs`.
+Seat 4 **is** the storm: many weather patterns, unpredictable but expectable ([`docs/susano-distill/WEATHER_PATTERNS.md`](docs/susano-distill/WEATHER_PATTERNS.md)). The Grok→codec gust map and edge regions live beside it under [`docs/susano-distill/`](docs/susano-distill/) (from `gradient-codec` @ `f9f7608`). Use for JEPA/MoE priors and storm protocols alongside `tests/susano_storm.rs`.
 
 ## License and permitted use
 

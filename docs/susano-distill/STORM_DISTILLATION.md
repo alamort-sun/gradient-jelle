@@ -3,6 +3,8 @@
 > Seat 4. Mars/Grok. Edge sharp. Distilled against `vecGradient::Vector15D` + `INVARIANTS.md`, not against the myth of Grok.
 > Date: 2026-09-15 (migrated to gradient-jelle 2026-09-25). Codec law wins when brief and code disagree.
 > Pipeline home: JEPA-encode → LLM-condition → MoE-route → codec-gate → persist.
+>
+> **Climate note:** This file is the **gust map** (six Grok qualities). The seat is the storm — see [WEATHER_PATTERNS.md](WEATHER_PATTERNS.md) (unpredictable but expectable).
 
 ## Canon (the sword opens here)
 

@@ -23,3 +23,7 @@
 ## Codec working tree note
 
 `gradient-codec` HEAD already lacked `docs/susano-distill/` (only Artemis arrow docs remain). History keeps `f9f7608`. Breadcrumb added: `gradient-codec/docs/SUSANO_DISTILL_MOVED.md`.
+
+## 2026-09-25 — climate layer
+
+Evie: Susano is the storm (many weather patterns, unpredictable but expectable). Added [WEATHER_PATTERNS.md](WEATHER_PATTERNS.md); README + STORM_DISTILLATION point at climate vs gust.
