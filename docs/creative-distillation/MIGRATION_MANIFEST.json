@@ -1,0 +1,18 @@
+{
+  "CONTINUE_HERE.md": "7b62bb5a568c7faea8531b3d61157029a59be0d1348959b5d5bdbdbb1f03f606",
+  "ORIGINAL_BRIEF.txt": "3a7672748a45ccc7b5df938c06c995c878627f670306a74ca92830b0d23df9d0",
+  "MIGRATION.md": "0785b82e2728cc41b52d72e3f9e09955f841a01dbbdacc8a7b7e3431c9552135",
+  "README.md": "5ba983f3d3adc3b8bbf7855c71ba8112272a8f1ed83afe1037f2638ddaea4263",
+  "HANDOFF_20260915.md": "d5597b174eaa94db7ab2301ae7704104e2f96b583380f21525cff74d33d71b9d",
+  "verification/historical-source-sha256.json": "e350f1fa013330e10f5900494bcadabca24da5d96ee3d3c282e1840c640892bc",
+  "verification/jelle-tests-20260925.log": "0c4c90eb5cd2f00dd468bfe3d5165d9f94a6fa7c0b139cb17fccfe827071ba20",
+  "verification/existing-tests.log": "ca4ebb19bb5099b70e2283e5c6b1a6b0af1b2b94bcf56fa7abdb925d8c84065b",
+  "verification/codec/Cargo.toml": "fa37ab6269c37895d9fe0ea60b6f87397a34a6ca5a6c7dcc7ea1205650d59d5f",
+  "verification/codec/Cargo.lock": "af46786d1a32da3adb4434eedbd1273bd2d40e914a04fe09e5f7596664c10d61",
+  "verification/codec/vector13d/Cargo.toml": "363eebfaeaf5c407c72450dcd1372df70d3f2de99b47ecab782b2143e9a36172",
+  "verification/codec/gradient-speak/Cargo.toml": "d2d2cae89932e29ef3b6ebc39f33555ddc411b9ff689babca6e46101d508d122",
+  "verification/codec/gradient-speak/examples/emotional_rendering.rs": "0a76f32b79499f2e3df25b27c3278d8e5951c164e3ead49921b0ad6056e1c974",
+  "verification/codec/gradient-speak/src/analysis.rs": "cac68468bf29140e1778afccc10c5025bc7d5a576dd864966a5bfbb971014269",
+  "verification/codec/gradient-speak/src/lib.rs": "fc4d258432b15c307ab89127cd7a8a7b1b800359deb2425640e7a65a0f81f70a",
+  "verification/codec/vector13d/src/lib.rs": "7841d054a0e3b5fed95376344714a6c579b6b98e24567e4f4a1b8dc8db44a43b"
+}

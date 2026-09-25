@@ -1,0 +1,103 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling thiserror v1.0.69
+   Compiling serde v1.0.229
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.5
+   Compiling syn v2.0.119
+   Compiling thiserror-impl v1.0.69
+   Compiling serde_derive v1.0.229
+   Compiling vecGradient v0.1.0 (/Users/evelynn8bit/Desktop/alamort/projects/gradient-codec/vecGradient)
+warning: fields `baseline_r` and `angle_deg` are never read
+   --> /Users/evelynn8bit/Desktop/alamort/projects/gradient-codec/vecGradient/src/lib.rs:841:5
+    |
+837 | pub struct TetherNode {
+    |            ---------- fields in this struct
+...
+841 |     baseline_r: f64,
+    |     ^^^^^^^^^^
+842 |     /// Angular position around the core ring (5 nodes → 72° apart).
+843 |     angle_deg: f64,
+    |     ^^^^^^^^^
+    |
+    = note: `TetherNode` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `net_tension_vector` is never used
+   --> /Users/evelynn8bit/Desktop/alamort/projects/gradient-codec/vecGradient/src/lib.rs:988:8
+    |
+965 | impl TensegrityCrust {
+    | -------------------- method in this implementation
+...
+988 |     fn net_tension_vector(&self) -> ([f64; 5], f64) {
+    |        ^^^^^^^^^^^^^^^^^^
+
+warning: crate `vecGradient` should have a snake case name
+  |
+  = help: convert the identifier to snake case: `vec_gradient`
+  = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+   Compiling gradient-jelle v0.1.0 (/Users/evelynn8bit/Desktop/alamort/projects/gradient-jelle)
+warning: `vecGradient` (lib) generated 3 warnings
+warning: struct `P` is never constructed
+   --> src/jepa_moe.rs:187:16
+    |
+187 |         struct P {
+    |                ^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `gradient-jelle` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.48s
+     Running unittests src/lib.rs (/private/tmp/creative-distillation-jelle-target/debug/deps/gradient_jelle-ddbae819c9c295bc)
+
+running 18 tests
+test jelle::tests::learned_route_on_high_coherence_routes ... ok
+test category_map::unit::defined_mapping_works ... ok
+test jelle::tests::forced_uncertainty_is_refused_end_to_end ... ok
+test jelle::tests::non_finite_state_refused_at_codec_gate ... ok
+test codec_gate::unit::validated_passes ... ok
+test jelle::tests::forced_route_on_shattered_state_refused ... ok
+test jelle::tests::same_state_yields_same_frame_id ... ok
+test jelle::tests::learned_route_on_shattered_state_abstains ... ok
+test jelle::tests::unmapped_expert_is_refused_at_category_gate ... ok
+test jelle::tests::full_pipeline_abstains_when_confidence_low ... ok
+test jelle::tests::full_pipeline_predicts_when_confidence_high ... ok
+test jepa_moe::unit::abstains_on_uncertain_latent ... ok
+test jepa_moe::unit::encode_is_deterministic ... ok
+test jepa_moe::unit::higher_coherence_lowers_uncertainty ... ok
+test jepa_moe::unit::refuses_forced_certainty_on_uncertain_latent ... ok
+test jepa_moe::unit::routes_on_certain_latent ... ok
+test persistence::unit::validated_persisted_row_ok ... ok
+test prediction::unit::high_confidence_predicts ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/susano_storm.rs (/private/tmp/creative-distillation-jelle-target/debug/deps/susano_storm-a2adf67f63c17967)
+
+running 11 tests
+test fails_when_signal_becomes_diagnosis ... ok
+test accepts_only_codec_validated_model_output ... ok
+test fails_when_model_bypasses_codec_validation ... ok
+test fails_when_categorical_cast_to_float_without_mapping ... ok
+test fails_when_float_cast_to_categorical_without_mapping ... ok
+test defined_mapping_is_required_bridge ... ok
+test fails_when_persistence_alone_confers_validity ... ok
+test uncertain_prediction_abstains_instead_of_forcing ... ok
+test fails_when_uncertain_prediction_is_forced ... ok
+test fails_when_signal_becomes_identity ... ok
+test persisted_and_explicitly_validated_may_materialize ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gradient_jelle
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

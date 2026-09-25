@@ -9,6 +9,10 @@ pub enum Category {
     A,
     B,
     C,
+    /// A pantheon seat as a routing expert — the orchestrator's target
+    /// space. Still gated: the seat's float axis must be defined in the
+    /// mapping table like any other category.
+    Seat(u8),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

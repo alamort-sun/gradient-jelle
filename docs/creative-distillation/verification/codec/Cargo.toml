@@ -1,0 +1,3 @@
+[workspace]
+members = ["vector13d", "gradient-speak"]
+resolver = "2"

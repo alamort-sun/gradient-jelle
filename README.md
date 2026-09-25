@@ -35,3 +35,7 @@ Commercial use requires a separate written license. See [COMMERCIAL.md](COMMERCI
 ## Codec geometry
 
 Canonical state is **Vector15D** in [gradient-codec](https://github.com/alamort-sun/gradient-codec) @ `c8d0ee1`. Fields 14–15 (`magnetic_north`, `magnetic_south`) are universal polar pre-stress. `Vector13D` remains a type alias.
+
+## Discordia creativity distillation
+
+The ongoing Astra creative-quality research and design work lives in [`docs/creative-distillation/`](docs/creative-distillation/README.md), migrated on 2026-09-25. Its handoff targets Jelle’s current Vector15D dependency and distinguishes historical codec checks from current architecture. The five specifications remain in progress.

@@ -1,0 +1,62 @@
+     Locking 11 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.6
+   Compiling serde_derive v1.0.229
+   Compiling vector13d v0.1.0 (/Users/evelynn8bit/.codex/.chatgpt-projects/g-p-6aa6b7ddd84881919d66758d2e235a2e/creative-distillation/verification/codec/vector13d)
+   Compiling gradient-speak v0.1.0 (/Users/evelynn8bit/.codex/.chatgpt-projects/g-p-6aa6b7ddd84881919d66758d2e235a2e/creative-distillation/verification/codec/gradient-speak)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.76s
+     Running unittests src/lib.rs (creative-distillation/verification/codec/target/debug/deps/gradient_speak-9a7fb2c4edf21d69)
+
+running 15 tests
+test analysis::tests::test_char_analysis ... ok
+test analysis::tests::test_emotional_tone ... ok
+test analysis::tests::test_text_analysis ... ok
+test analysis::tests::test_emotional_vectors ... ok
+test analysis::tests::test_hue_distribution ... ok
+test props::non_void_has_hsl ... ok
+test props::all_void_grey ... ok
+test tests::test_render_length ... ok
+test tests::test_dominant_hue_pink ... ok
+test tests::test_torsion_range ... ok
+test tests::test_torsion_field_multi_void ... ok
+test tests::test_void_neutral ... ok
+test tests::test_trust_meter ... ok
+test tests::test_svg_has_elements ... ok
+test props::preserves_length ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (creative-distillation/verification/codec/target/debug/deps/vector13d-5f05798d81d87510)
+
+running 8 tests
+test tests::test_default ... ok
+test tests::test_class_string ... ok
+test tests::test_hue_range ... ok
+test tests::test_glyph_weight ... ok
+test tests::test_void ... ok
+test tests::test_void_glyph_props ... ok
+test tests::test_lightness ... ok
+test tests::test_serialization ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests gradient_speak
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vector13d
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

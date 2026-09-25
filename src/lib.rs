@@ -8,6 +8,7 @@ pub mod category_map;
 pub mod codec_gate;
 pub mod jelle;
 pub mod jepa_moe;
+pub mod orchestrator;
 pub mod persistence;
 pub mod prediction;
 
@@ -16,5 +17,6 @@ pub use category_map::{from_float, to_float, Category, FloatAxis, MappingTable};
 pub use codec_gate::{accept_model_output, CodecValidated, ModelOutput};
 pub use jelle::{ExpertIndex, Jelle, JelleError, JelleState, LlmCondition, StepOutcome};
 pub use jepa_moe::{JepaLatent, MoeError, MoeGate, MoeRoute};
+pub use orchestrator::{dispatch, seat_mapping, Candidate, Dispatch, SeatVerdict};
 pub use persistence::{materialize, PersistedRow, ValidatedRecord};
 pub use prediction::{decide, Decision, PredictionAttempt};
