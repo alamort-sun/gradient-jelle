@@ -165,9 +165,9 @@ impl Jelle {
     /// 2. expert category<->float      -> category-map gate
     /// 3. llm.condition -> decide()    -> prediction gate (no forced uncertainty)
     /// 4. model-output codec-gate + persistence-materialize
+    ///    (both call real Vector15D::validate — no boolean flags)
     /// 5. boundary law: reason about STATE (the marble), never a diagnosis/
-    ///    identity claim about the person — the model side of the governed
-    ///    crossing fails closed.
+    ///    identity claim about the person — debug_assert canary only
     ///
     /// Returns Err the moment ANY gate refuses. The bypass path does not exist.
     pub fn step(&self, state: &JelleState, llm: &LlmCondition) -> Result<StepOutcome, JelleError> {
@@ -190,12 +190,10 @@ impl Jelle {
         let decision = decide(&att)?;
 
         // 4. codec-gate the model output, then persistence-materialize it.
-        //    codec_validated is true ONLY because state.validate() (step 1) passed —
-        //    the flag is earned, not asserted.
+        //    Both gates deserialize → Vector15D::validate (no boolean flags).
         let raw = serde_json::to_vec(&state.0).map_err(|_| JelleError::Encode)?;
         let out = ModelOutput {
             raw,
-            codec_validated: true,
             frame_id: Some(state.frame_id()),
         };
         let validated: CodecValidated = accept_model_output(&out)?;
@@ -204,13 +202,12 @@ impl Jelle {
             payload: validated.bytes,
             persisted: true,
         };
-        let record = crate::persistence::materialize(&row, /* explicitly_validated: */ true)?;
+        let record = crate::persistence::materialize(&row)?;
 
-        // 5. boundary law — the pipeline reasons about state, not about the person.
-        //    claim_about_entity always fails closed; the guard is kept explicit so a
-        //    future loosening trips this gate instead of silently passing.
-        let _refuse = claim_about_entity(ClaimClass::Diagnosis);
-        debug_assert!(_refuse.is_err());
+        // 5. boundary law — pipeline reasons about STATE, never a person-claim.
+        //    claim_about_entity always fails closed; debug_assert-only canary
+        //    (no ceremonial Result discard at the call site).
+        debug_assert!(claim_about_entity(ClaimClass::Diagnosis).is_err());
 
         match decision {
             Decision::Predict { label, confidence } => Ok(StepOutcome::Predicted {
