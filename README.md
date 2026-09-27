@@ -39,3 +39,7 @@ Canonical state is **Vector15D** in [gradient-codec](https://github.com/alamort-
 ## Discordia creativity distillation
 
 The ongoing Astra creative-quality research and design work lives in [`docs/creative-distillation/`](docs/creative-distillation/README.md), migrated on 2026-09-25. Its handoff targets Jelle’s current Vector15D dependency and distinguishes historical codec checks from current architecture. The five specifications remain in progress.
+
+## Collaborative Discordia
+
+Start a local expressive conversation with `Start Discordia.command`. The new dialogue layer carries context, explicit preferred replies, and controls for playfulness, bold composition and colour exploration. See [the guide](docs/COLLABORATIVE_DISCORDIA.md). This is working model conditioning, not a newly trained JEPA or a verified improvement in creativity.

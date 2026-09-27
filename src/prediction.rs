@@ -33,21 +33,29 @@ pub enum PredictionError {
 /// Below this confidence, abstain unless... never force. Force is always Err.
 pub const ABSTAIN_BELOW: f32 = 0.55;
 
+/// The default line. `decide` pins the threshold to `ABSTAIN_BELOW`.
 pub fn decide(attempt: &PredictionAttempt) -> Result<Decision, PredictionError> {
+    decide_with(attempt, ABSTAIN_BELOW)
+}
+
+/// The same gate at a caller-chosen line — the entry point learned
+/// calibration uses (`learn::CalibrationTable`). The law is identical at
+/// any threshold: out-of-range confidence errors, uncertain abstains,
+/// forcing is always refused.
+pub fn decide_with(
+    attempt: &PredictionAttempt,
+    threshold: f32,
+) -> Result<Decision, PredictionError> {
     if !(0.0..=1.0).contains(&attempt.confidence) || attempt.confidence.is_nan() {
         return Err(PredictionError::InvalidConfidence);
     }
-    if attempt.confidence < ABSTAIN_BELOW {
+    if attempt.confidence < threshold {
         if attempt.force {
             return Err(PredictionError::ForcedUncertainty);
         }
         return Ok(Decision::Abstain {
             reason: "confidence below abstain threshold",
         });
-    }
-    if attempt.force && attempt.confidence < ABSTAIN_BELOW {
-        // unreachable due to above, kept for clarity of law
-        return Err(PredictionError::ForcedUncertainty);
     }
     Ok(Decision::Predict {
         label: attempt.label,

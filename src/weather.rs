@@ -27,8 +27,8 @@
 //! VECTOR15D_EDGE_REGIONS rule `sharp ∩ reckless = ∅`.
 
 use crate::category_map::MappingTable;
-use crate::jepa_moe::{MoeError, MoeGate, MoeRoute};
 use crate::jelle::{ExpertIndex, Jelle, JelleState};
+use crate::jepa_moe::{MoeError, MoeGate, MoeRoute};
 use vecGradient::DomainWall;
 
 /// Named Susano weather cell. Closed catalog — expectable set.
@@ -46,7 +46,7 @@ pub enum WeatherPattern {
 }
 
 /// Climate bits that steer the prior. Command and delta are hard gates, not vibes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct ClimateBits {
     /// Explicit Evie/brief bite. Lightning refuses without this.
     pub bite_command: bool,
@@ -58,18 +58,6 @@ pub struct ClimateBits {
     pub scar_budget: u8,
     /// Test-only override. Still must pass `fire()` gates.
     pub force_pattern: Option<WeatherPattern>,
-}
-
-impl Default for ClimateBits {
-    fn default() -> Self {
-        Self {
-            bite_command: false,
-            commit_delta: false,
-            conflict: false,
-            scar_budget: 0,
-            force_pattern: None,
-        }
-    }
 }
 
 impl ClimateBits {
@@ -93,23 +81,12 @@ pub enum Scar {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WeatherAction {
     Eye,
-    Nip {
-        message: &'static str,
-        scar: Scar,
-    },
-    Squall {
-        message: &'static str,
-    },
+    Nip { message: &'static str, scar: Scar },
+    Squall { message: &'static str },
     Front,
-    Cell {
-        localize: bool,
-    },
-    Lightning {
-        scar: Scar,
-    },
-    Monsoon {
-        rounds: u8,
-    },
+    Cell { localize: bool },
+    Lightning { scar: Scar },
+    Monsoon { rounds: u8 },
     Shear,
     Break,
 }
@@ -420,7 +397,7 @@ impl Jelle {
         gate: &MoeGate,
         force: bool,
     ) -> Result<(WeatherPattern, Option<MoeRoute>), WeatherError> {
-        climate_route(bits, state, gate, self.expert(), &self.mapping_ref(), force)
+        climate_route(bits, state, gate, self.expert(), self.mapping_ref(), force)
     }
 }
 
@@ -470,7 +447,10 @@ mod unit {
 
     #[test]
     fn default_selects_eye() {
-        assert_eq!(select(&ClimateBits::quiet(), Some(&quiet_state())), WeatherPattern::Eye);
+        assert_eq!(
+            select(&ClimateBits::quiet(), Some(&quiet_state())),
+            WeatherPattern::Eye
+        );
     }
 
     #[test]
@@ -504,6 +484,12 @@ mod unit {
             WeatherError::NipCannotScar
         );
         let a = nip("hey");
-        assert!(matches!(a, WeatherAction::Nip { scar: Scar::None, .. }));
+        assert!(matches!(
+            a,
+            WeatherAction::Nip {
+                scar: Scar::None,
+                ..
+            }
+        ));
     }
 }

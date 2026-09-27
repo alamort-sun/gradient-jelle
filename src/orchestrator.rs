@@ -159,9 +159,7 @@ mod unit {
         let map = seat_mapping(&cands);
         let d = dispatch(&cands, &MoeGate::default(), &map, false).expect("dispatch");
         match d {
-            Dispatch::Routed {
-                seat, verdicts, ..
-            } => {
+            Dispatch::Routed { seat, verdicts, .. } => {
                 assert_eq!(seat, 4);
                 assert_eq!(verdicts.len(), 2);
             }
