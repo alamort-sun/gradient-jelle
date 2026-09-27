@@ -69,10 +69,16 @@ pub fn dispatch(
     let mut verdicts = Vec::with_capacity(candidates.len());
     let mut best: Option<(u8, f32)> = None;
     for c in candidates {
+        if !c.fit.is_finite() || !(0.0..=1.0).contains(&c.fit) {
+            return Err(MoeError::InvalidInput("candidate fit outside [0, 1]"));
+        }
+        c.state
+            .validate()
+            .map_err(|_| MoeError::InvalidInput("invalid candidate state"))?;
         let latent = JepaLatent::encode(&c.state);
         // Fit folds into certainty: an ineligible or ill-fitting seat reads
         // as an uncertain route, not a banned one — the gate decides.
-        let certainty = latent.certainty() * c.fit.clamp(0.0, 1.0);
+        let certainty = latent.certainty() * c.fit;
         let effective = JepaLatent {
             code: latent.code,
             uncertainty: 1.0 - certainty,

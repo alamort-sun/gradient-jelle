@@ -24,6 +24,8 @@ pub enum Decision {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PredictionError {
+    #[error("threshold outside [0, 1]")]
+    InvalidThreshold,
     #[error("confidence outside [0, 1]")]
     InvalidConfidence,
     #[error("forcing an uncertain prediction is forbidden")]
@@ -46,6 +48,9 @@ pub fn decide_with(
     attempt: &PredictionAttempt,
     threshold: f32,
 ) -> Result<Decision, PredictionError> {
+    if !threshold.is_finite() || !(0.0..=1.0).contains(&threshold) {
+        return Err(PredictionError::InvalidThreshold);
+    }
     if !(0.0..=1.0).contains(&attempt.confidence) || attempt.confidence.is_nan() {
         return Err(PredictionError::InvalidConfidence);
     }

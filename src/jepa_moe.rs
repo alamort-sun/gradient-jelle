@@ -97,6 +97,8 @@ pub enum MoeRoute {
 /// Errors from the MoE gate. Each names the gate that refused.
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum MoeError {
+    #[error("invalid routing input: {0}")]
+    InvalidInput(&'static str),
     #[error("uncertain latent cannot be forced to route (uncertainty {0})")]
     ForcedCertainty(f32),
     #[error("category gate not satisfied inside MoE routing: {0}")]
@@ -133,6 +135,15 @@ impl MoeGate {
         mapping: &MappingTable,
         force: bool,
     ) -> Result<MoeRoute, MoeError> {
+        if !self.threshold.is_finite() || !(0.0..=1.0).contains(&self.threshold) {
+            return Err(MoeError::InvalidInput("threshold outside [0, 1]"));
+        }
+        if !latent.code.is_finite() {
+            return Err(MoeError::InvalidInput("non-finite latent code"));
+        }
+        if !latent.uncertainty.is_finite() || !(0.0..=1.0).contains(&latent.uncertainty) {
+            return Err(MoeError::InvalidInput("uncertainty outside [0, 1]"));
+        }
         // Re-enter the category-map gate: a bad mapping trips the same sword.
         let axis = to_float(expert, Some(mapping))?;
         if latent.uncertainty >= self.threshold {

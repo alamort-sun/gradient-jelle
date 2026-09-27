@@ -42,7 +42,7 @@ impl ArmStats {
     /// Beta(1,1)-smoothed resolution rate — sparse evidence stays near 0.5
     /// instead of swinging on a single observation.
     pub fn resolve_rate(&self) -> f32 {
-        (self.resolved + 1) as f32 / (self.trials + 2) as f32
+        ((self.resolved.min(self.trials) as f64 + 1.0) / (self.trials as f64 + 2.0)) as f32
     }
 }
 
@@ -69,27 +69,41 @@ pub struct CalibrationTable {
     pub kinds: HashMap<String, KindCalibration>,
 }
 
+// Preserve the infallible API while ensuring restored/publicly mutated tables
+// cannot remove the gate. Non-finite configuration uses the strictest bound.
+fn bounded_base(base: f32) -> f32 {
+    if base.is_finite() {
+        base.clamp(THRESH_MIN, THRESH_MAX)
+    } else {
+        THRESH_MAX
+    }
+}
+
 impl CalibrationTable {
     pub fn new(base: f32) -> Self {
         CalibrationTable {
-            base,
+            base: bounded_base(base),
             kinds: HashMap::new(),
         }
     }
 
-    /// Effective line for `kind`. Returns `base` until MIN_SAMPLES decisions
+    /// Effective line for `kind`. Returns bounded `base` until MIN_SAMPLES decisions
     /// exist for that kind, then shifts toward whichever arm resolves better:
     /// abstain resolving more than speak pushes the line up (quieter); speak
     /// resolving more pulls it down (more willing). Always clamped.
     pub fn effective_threshold(&self, kind: &str) -> f32 {
+        let base = bounded_base(self.base);
         let Some(k) = self.kinds.get(kind) else {
-            return self.base;
+            return base;
         };
-        if k.spoke.trials + k.abstained.trials < MIN_SAMPLES {
-            return self.base;
+        if k.spoke.resolved > k.spoke.trials || k.abstained.resolved > k.abstained.trials {
+            return THRESH_MAX;
+        }
+        if k.spoke.trials.saturating_add(k.abstained.trials) < MIN_SAMPLES {
+            return base;
         }
         let diff = k.abstained.resolve_rate() - k.spoke.resolve_rate();
-        (self.base + GAIN * diff).clamp(THRESH_MIN, THRESH_MAX)
+        (base + GAIN * diff).clamp(THRESH_MIN, THRESH_MAX)
     }
 
     /// A same-kind flag arrived — close the pending decision, if any.
@@ -106,9 +120,9 @@ impl CalibrationTable {
         self.close_pending(kind, now);
         let k = self.kinds.entry(kind.to_string()).or_default();
         if spoke {
-            k.spoke.trials += 1;
+            k.spoke.trials = k.spoke.trials.saturating_add(1);
         } else {
-            k.abstained.trials += 1;
+            k.abstained.trials = k.abstained.trials.saturating_add(1);
         }
         k.pending = Some((now, spoke));
     }
@@ -125,9 +139,9 @@ impl CalibrationTable {
         };
         if now.saturating_sub(opened) > RECUR_WINDOW_SECS {
             if spoke {
-                k.spoke.resolved += 1;
+                k.spoke.resolved = k.spoke.resolved.saturating_add(1);
             } else {
-                k.abstained.resolved += 1;
+                k.abstained.resolved = k.abstained.resolved.saturating_add(1);
             }
         }
     }
